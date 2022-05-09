@@ -68,7 +68,7 @@ class Train_Test():
         best_acc = 0.0
 
         for epoch in range(num_epochs):
-            if (epoch + 1) % 5 == 1:
+            if epoch == 0 or (epoch + 1) % 10 == 0:
                 print()
                 print('Epoch {}/{}'.format(epoch + 1, num_epochs))
 
@@ -116,7 +116,7 @@ class Train_Test():
                 epoch_loss = running_loss / running_total
                 epoch_acc = running_corrects.double() / running_total
 
-                if (epoch + 1) % 5 == 1:
+                if epoch == 0 or (epoch + 1) % 10 == 0:
                     print('{} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
 
                 # validation 단계에서 validation loss가 감소할 때마다 best model 가중치를 업데이트함
