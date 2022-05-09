@@ -10,6 +10,22 @@ import torch.optim as optim
 
 class Train_Test():
     def __init__(self, config, train_loader, valid_loader, test_loader):
+        """
+        Initialize Train_Test class
+
+        :param config: configuration
+        :type config: dictionary
+
+        :param train_loader: train dataloader
+        :type config: DataLoader
+
+        :param valid_loader: validation dataloader
+        :type config: DataLoader
+
+        :param test_loader: test dataloader
+        :type config: DataLoader
+        """
+
         self.config = config
         self.train_loader = train_loader
         self.valid_loader = valid_loader
@@ -22,6 +38,28 @@ class Train_Test():
         self.num_classes = self.parameter['num_classes']
 
     def train(self, model, dataloaders, criterion, num_epochs, optimizer):
+        """
+        Train the model
+
+        :param model: initialized model
+        :type model: model
+
+        :param dataloaders: train & validation dataloaders
+        :type dataloaders: dictionary
+
+        :param criterion: loss function for training
+        :type criterion: criterion
+
+        :param num_epochs: the number of train epochs
+        :type num_epochs: int
+
+        :param optimizer: optimizer used in training
+        :type optimizer: optimizer
+
+        :return: trained model
+        :rtype: model
+        """
+
         since = time.time()
 
         val_acc_history = []
@@ -96,10 +134,28 @@ class Train_Test():
 
         # validation loss가 가장 낮았을 때의 best model 가중치를 불러와 best model을 구축함
         model.load_state_dict(best_model_wts)
-
         return model
 
     def test(self, model, test_loader):
+        """
+        Predict classes for test dataset based on the trained model
+
+        :param model: best trained model
+        :type model: model
+
+        :param test_loader: test dataloader
+        :type test_loader: DataLoader
+
+        :return: predicted classes
+        :rtype: numpy array
+
+        :return: prediction probabilities
+        :rtype: numpy array
+
+        :return: test accuracy
+        :rtype: float
+        """
+
         model.eval()   # 모델을 validation mode로 설정
         
         # test_loader에 대하여 검증 진행 (gradient update 방지)
@@ -130,7 +186,7 @@ class Train_Test():
 
             preds = np.array(preds)
             probs = np.array(probs)
-            acc = corrects.double() / total
+            acc = (corrects.double() / total).item()
        
-        return preds, probs, acc.item()
+        return preds, probs, acc
     

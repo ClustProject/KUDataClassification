@@ -22,26 +22,36 @@ class Classification():
         :param config: config
         :type config: dictionary
 
-        :param train_data: train data whose shape is (# observations, # features, # time steps)
+        :param train_data: train data with X and y
         :type train_data: dictionary
 
-        :param test_data: test data whose shape is (# observations, # features, # time steps)
+        :param test_data: test data with X and y
         :type test_data: dictionary
         
         example
-            >>> config = {
-                    'model': 'LSTM', # classification에에 활용할 알고리즘 정의, {'RNN', 'LSTM', 'GRU', 'CONV_1D', 'FC_layer'} 중 택 1
+            >>> config1 = {
+                    'model': 'LSTM', # classification에에 활용할 알고리즘 정의, {'LSTM', 'GRU', 'CNN_1D', 'LSTM_FCNs', 'FC_layer'} 중 택 1
+                    'training': True,  # 학습 여부, 저장된 학습 완료 모델 존재시 False로 설정
+                    'best_model_path': './ckpt/lstm.pt',  # 학습 완료 모델 저장 경로
                     'parameter': {
-                        'input_size' : 50, # input time series data를 windowing 하여 자르는 길이(size)
-                        'num_layers' : 2, # recurrnet layers의 수, Default : 1
-                        'hidden_size' : 64, # hidden state의 벡터차원 수
-                        'dropout' : 0.2, # If non-zero, introduces a Dropout layer on the outputs of each RNN layer except the last layer, with dropout probability equal to dropout. Default: 0
-                        'bidirectional' : True, # 모델의 양방향성 여부
-                        'batch_size' : 64 #batch size
-                        'device' : torch.device("cuda:0" if torch.cuda.is_available() else "cpu") # Detect if we have a GPU available
-                        'num_epochs' : 200 # 학습 시 사용할 epoch 수
+                        'input_size': 9,  # 데이터의 변수 개수, int
+                        'num_classes': 6,  # 분류할 class 개수, int
+                        'num_layers': 1,  # recurrent layers의 수, int(default: 1, 범위: 1 이상)
+                        'hidden_size': 64,  # hidden state의 차원, int(default: 64, 범위: 1 이상)
+                        'dropout': 0.1,  # dropout 확률, float(default: 0.1, 범위: 0 이상 1 이하)
+                        'bidirectional': True,  # 모델의 양방향성 여부, bool(default: True)
+                        'num_epochs': 100,  # 학습 epoch 횟수, int(default: 100, 범위: 1 이상)
+                        'batch_size': 512,  # batch 크기, int(default: 512, 범위: 1 이상, 컴퓨터 사양에 적합하게 설정)
+                        'lr': 0.0001,  # learning rate, float(default: 0.001, 범위: 0.1 이하)
+                        'device': 'cuda'  # 학습 환경, ["cuda", "cpu"] 중 선택
                     }
                 }
+            >>> data_cls = mc.Classification(config, train_data, test_data)
+            >>> model = data_cls.build_model()  # 모델 구축
+            >>> if config["training"]:
+            >>>     best_model = data_cls.train_model(model)  # 모델 학습
+            >>>     data_cls.save_model(best_model, best_model_path=config["best_model_path"])  # 모델 저장
+            >>> pred, prob, acc = data_cls.pred_data(model, best_model_path=config["best_model_path"])  # class 예측
         """
 
         self.config = config
@@ -51,10 +61,12 @@ class Classification():
         self.train_data = train_data
         self.test_data = test_data
 
+        # load dataloder
         self.train_loader, self.valid_loader, self.test_loader = self.get_loaders(train_data=self.train_data,
                                                                                   test_data=self.test_data,
                                                                                   batch_size=self.parameter['batch_size'])
 
+        # build trainer
         self.trainer = Train_Test(self.config, self.train_loader, self.valid_loader, self.test_loader)
 
     def build_model(self):
@@ -66,15 +78,7 @@ class Classification():
         """
 
         # build initialized model
-        if self.model == 'LSTM_FCNs':
-            init_model = LSTM_FCNs(
-                input_size=self.parameter['input_size'],
-                num_classes=self.parameter['num_classes'],
-                num_layers=self.parameter['num_layers'],
-                lstm_drop_p=self.parameter['lstm_drop_out'],
-                fc_drop_p=self.parameter['fc_drop_out']
-            )
-        elif self.model == 'LSTM':
+        if self.model == 'LSTM':
             init_model = RNN_model(
                 rnn_type='lstm',
                 input_size=self.parameter['input_size'],
@@ -105,6 +109,14 @@ class Classification():
                 padding=self.parameter['padding'],
                 drop_out=self.parameter['drop_out']
             )
+        elif self.model == 'LSTM_FCNs':
+            init_model = LSTM_FCNs(
+                input_size=self.parameter['input_size'],
+                num_classes=self.parameter['num_classes'],
+                num_layers=self.parameter['num_layers'],
+                lstm_drop_p=self.parameter['lstm_drop_out'],
+                fc_drop_p=self.parameter['fc_drop_out']
+            )
         elif self.model == 'FC':
             init_model = FC(
                 representation_size=self.parameter['input_size'],
@@ -120,8 +132,8 @@ class Classification():
         """
         Train model and return best model
 
-        :param model: initialized model
-        :type model: model
+        :param init_model: initialized model
+        :type init_model: model
 
         :return: best trained model
         :rtype: model
@@ -155,15 +167,21 @@ class Classification():
 
     def pred_data(self, init_model, best_model_path):
         """
-        Encode raw data to representations based on the best trained model
-        :param model: initialized model
+        Predict class based on the best trained model
+        :param init_model: initialized model
         :type model: model
 
         :param best_model_path: path for loading the best trained model
         :type best_model_path: str
 
-        :return: representation vectors for train and test dataset
+        :return: predicted classes
         :rtype: numpy array
+
+        :return: prediction probabilities
+        :rtype: numpy array
+
+        :return: test accuracy
+        :rtype: float
         """
 
         print("\nStart testing data\n")
@@ -176,12 +194,28 @@ class Classification():
         return pred, prob, acc
     
     def get_loaders(self, train_data, test_data, batch_size):
-        # data_dir에 있는 train/test 데이터 불러오기
+        """
+        Get train, validation, and test DataLoaders
+        
+        :param train_data: train data with X and y
+        :type train_data: dictionary
+
+        :param test_data: test data with X and y
+        :type test_data: dictionary
+
+        :param batch_size: batch size
+        :type batch_size: int
+
+        :return: train, validation, and test dataloaders
+        :rtype: DataLoader
+        """
+
         x = train_data['x']
         y = train_data['y']
         x_test = test_data['x']
         y_test = test_data['y']
         
+        # class의 값이 0부터 시작하지 않으면 0부터 시작하도록 변환
         if np.min(y) != 0:
             min_num = np.min(y)
             print('Set start class as zero')
@@ -189,7 +223,7 @@ class Classification():
             y_test = y_test - min_num
         else:
             pass
-                 
+
         # train data를 시간순으로 8:2의 비율로 train/validation set으로 분할
         n_train = int(0.8 * len(x))
         x_train, y_train = x[:n_train], y[:n_train]
@@ -199,7 +233,7 @@ class Classification():
         datasets = []
         for dataset in [(x_train, y_train), (x_valid, y_valid), (x_test, y_test)]:
             x_data = np.array(dataset[0])
-            y_data = dataset[1]  # 묶여있는 window 관측치 하나마다 y_label 값이 하나씩 달려있는 dataset 이므로
+            y_data = dataset[1]
             datasets.append(torch.utils.data.TensorDataset(torch.Tensor(x_data), torch.Tensor(y_data)))
 
         # train/validation/test DataLoader 구축
