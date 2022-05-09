@@ -9,18 +9,18 @@ import torch.optim as optim
 
 
 class Train_Test():
-    def __init__(self, config, train_loader, valid_loader, test_loader, input_size, num_classes):
+    def __init__(self, config, train_loader, valid_loader, test_loader):
         self.config = config
         self.train_loader = train_loader
         self.valid_loader = valid_loader
         self.test_loader = test_loader
-        self.input_size = input_size
-        self.num_classes = num_classes
 
-        self.with_representation = config['with_representation']
         self.model = self.config['model']
         self.parameter = self.config['parameter']
-            
+
+        self.input_size = self.parameter['input_size']
+        self.num_classes = self.parameter['num_classes']
+
     def train(self, model, dataloaders, criterion, num_epochs, optimizer):
         since = time.time()
 
@@ -91,15 +91,13 @@ class Train_Test():
 
         # 전체 학습 시간 계산
         time_elapsed = time.time() - since
-        print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
+        print('\nTraining complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
         print('Best val Acc: {:4f}'.format(best_acc))
 
         # validation loss가 가장 낮았을 때의 best model 가중치를 불러와 best model을 구축함
         model.load_state_dict(best_model_wts)
-        
-        # best model 가중치 저장
-        # torch.save(best_model_wts, '../output/best_model.pt')
-        return model, val_acc_history
+
+        return model
 
     def test(self, model, test_loader):
         model.eval()   # 모델을 validation mode로 설정
@@ -132,6 +130,7 @@ class Train_Test():
 
             preds = np.array(preds)
             probs = np.array(probs)
+            acc = corrects.double() / total
        
-        return preds, probs
+        return preds, probs, acc.item()
     
