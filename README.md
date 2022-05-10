@@ -77,7 +77,7 @@
 
 #### 데이터 표상 분류 모델 hyperparameter <br>
 
-#### 1. LSTM & GRU (w/o data representation)
+#### 1. FC (w/ data representation)
 - **input_size** : 데이터의 변수 개수, int
 - **num_classes** : 분류할 class 개수, int
 - **dropout** : dropout 확률, float(default: 0.1, 범위: 0 이상 1 이하)
