@@ -9,35 +9,20 @@ import torch.optim as optim
 
 
 class Train_Test():
-    def __init__(self, config, train_loader, valid_loader, test_loader):
+    def __init__(self, config):
         """
         Initialize Train_Test class
 
         :param config: configuration
         :type config: dictionary
-
-        :param train_loader: train dataloader
-        :type config: DataLoader
-
-        :param valid_loader: validation dataloader
-        :type config: DataLoader
-
-        :param test_loader: test dataloader
-        :type config: DataLoader
         """
 
-        self.config = config
-        self.train_loader = train_loader
-        self.valid_loader = valid_loader
-        self.test_loader = test_loader
+        self.model = config['model']
+        self.parameter = config['parameter']
+        self.num_epochs = self.parameter['num_epochs']
+        self.device = self.parameter['device']
 
-        self.model = self.config['model']
-        self.parameter = self.config['parameter']
-
-        self.input_size = self.parameter['input_size']
-        self.num_classes = self.parameter['num_classes']
-
-    def train(self, model, dataloaders, criterion, num_epochs, optimizer):
+    def train(self, model, dataloaders):
         """
         Train the model
 
@@ -47,30 +32,25 @@ class Train_Test():
         :param dataloaders: train & validation dataloaders
         :type dataloaders: dictionary
 
-        :param criterion: loss function for training
-        :type criterion: criterion
-
-        :param num_epochs: the number of train epochs
-        :type num_epochs: int
-
-        :param optimizer: optimizer used in training
-        :type optimizer: optimizer
-
         :return: trained model
         :rtype: model
         """
 
         since = time.time()
 
+        model = model.to(self.device)
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(model.parameters(), lr=self.parameter['lr'])
+
         val_acc_history = []
 
         best_model_wts = copy.deepcopy(model.state_dict())
         best_acc = 0.0
 
-        for epoch in range(num_epochs):
+        for epoch in range(self.num_epochs):
             if epoch == 0 or (epoch + 1) % 10 == 0:
                 print()
-                print('Epoch {}/{}'.format(epoch + 1, num_epochs))
+                print('Epoch {}/{}'.format(epoch + 1, self.num_epochs))
 
             # 각 epoch마다 순서대로 training과 validation을 진행
             for phase in ['train', 'val']:
@@ -85,9 +65,8 @@ class Train_Test():
 
                 # training과 validation 단계에 맞는 dataloader에 대하여 학습/검증 진행
                 for inputs, labels in dataloaders[phase]:
-                    inputs = inputs.to(self.parameter['device'])
-                    labels = labels.to(self.parameter['device'], dtype=torch.long)
-                    # seq_lens = seq_lens.to(self.parameter['device'])
+                    inputs = inputs.to(self.device)
+                    labels = labels.to(self.device, dtype=torch.long)
                     
                     # parameter gradients를 0으로 설정
                     optimizer.zero_grad()
@@ -126,13 +105,12 @@ class Train_Test():
                 if phase == 'val':
                     val_acc_history.append(epoch_acc)
 
-
         # 전체 학습 시간 계산
         time_elapsed = time.time() - since
         print('\nTraining complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
         print('Best val Acc: {:4f}'.format(best_acc))
 
-        # validation loss가 가장 낮았을 때의 best model 가중치를 불러와 best model을 구축함
+        # validation accuracy가 가장 높았을 때의 best model 가중치를 불러와 best model을 구축함
         model.load_state_dict(best_model_wts)
         return model
 
@@ -148,45 +126,25 @@ class Train_Test():
 
         :return: predicted classes
         :rtype: numpy array
-
-        :return: prediction probabilities
-        :rtype: numpy array
-
-        :return: test accuracy
-        :rtype: float
         """
 
+        model = model.to(self.device)
         model.eval()   # 모델을 validation mode로 설정
         
         # test_loader에 대하여 검증 진행 (gradient update 방지)
         with torch.no_grad():
-            corrects = 0
-            total = 0
             preds = []
-            probs = []
             for inputs, labels in test_loader:
-                inputs = inputs.to(self.parameter['device'])
-                labels = labels.to(self.parameter['device'], dtype=torch.long)
+                inputs = inputs.to(self.device)
+                labels = labels.to(self.device, dtype=torch.long)
 
                 # forward
                 # input을 model에 넣어 output을 도출
                 outputs = model(inputs)
-                prob = outputs
-                prob = nn.Softmax(dim=1)(prob)
-                
+
                 # output 중 최댓값의 위치에 해당하는 class로 예측을 수행
                 _, pred = torch.max(outputs, 1)
-                
-                # batch별 정답 개수를 축적함
-                corrects += torch.sum(pred == labels.data)
-                total += labels.size(0)
 
                 preds.extend(pred.detach().cpu().numpy())
-                probs.extend(prob.detach().cpu().numpy())
-
-            preds = np.array(preds)
-            probs = np.array(probs)
-            acc = (corrects.double() / total).item()
-       
-        return preds, probs, acc
+        return np.array(preds)
     
