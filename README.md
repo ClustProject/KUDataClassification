@@ -3,12 +3,11 @@
 ## 1. Without data representation
 
 - 원본 시계열 데이터를 입력으로 활용하는 time series classification에 대한 설명
-- 입력 데이터 형태 : (num_of_instance x input_dims x seq_len) 차원의 다변량 시계열 데이터(multivariate time-series data)
+- 입력 데이터 형태 : (num_of_instance, input_dims, time_steps) 차원의 다변량 시계열 데이터(multivariate time-series data)
 <br>
 
 **Time series classification 사용 시, 설정해야하는 값**
 * **model** : ['LSTM', 'GRU', 'CNN_1D', 'LSTM_FCNs'] 중 선택
-* **training** : 모델 학습 여부, [True, False] 중 선택, 학습 완료된 모델이 저장되어 있다면 False 선택
 * **best_model_path** : 학습 완료된 모델을 저장할 경로
 
 * **시계열 분류 모델 hyperparameter :** 아래에 자세히 설명.
@@ -63,12 +62,11 @@
 <br><br>
 ## 2. With data representation
 - 원본 시계열 데이터를 representation vector로 변환한 데이터를 입력으로 활용하는 time series classification에 대한 설명
-- 입력 데이터 형태 : (num_of_instance x input_dims) 차원의 다변량 시계열 데이터(multivariate time-series data)
+- 입력 데이터 형태 : (num_of_instance, embedding_dim) 차원의 다변량 시계열 데이터(multivariate time-series data)
 <br>
 
 **Time series classification 사용 시, 설정해야하는 값**
 * **model** : 'FC' 선택
-* **training** : 모델 학습 여부, [True, False] 중 선택, 학습 완료된 모델이 저장되어 있다면 False 선택
 * **best_model_path** : 학습 완료된 모델을 저장할 경로
 
 * **시계열 분류 모델 hyperparameter :** 아래에 자세히 설명.
