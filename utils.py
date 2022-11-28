@@ -3,7 +3,7 @@ import pickle
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import StandardScaler
 
 
 def load_data(folderAddress, model_name):
@@ -33,7 +33,7 @@ def load_data(folderAddress, model_name):
 
 def get_train_val_data(train_data, valid_data, scaler_path):
     # normalization
-    scaler = MinMaxScaler()
+    scaler = StandardScaler()
 
     if len(train_data.shape) == 1:  # shape=(time_steps, )
         scaler = scaler.fit(np.expand_dims(train_data, axis=-1))
@@ -56,7 +56,7 @@ def get_train_val_data(train_data, valid_data, scaler_path):
         scaled_data.append(data)
 
     # save scaler
-    print(f"Save MinMaxScaler in path: {scaler_path}")
+    print(f"Save StandardScaler in path: {scaler_path}")
     pickle.dump(scaler, open(scaler_path, 'wb'))
     return scaled_data
 
