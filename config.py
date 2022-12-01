@@ -1,7 +1,7 @@
 model_config = {
     'LSTM' : {  # Case 1. LSTM model (w/o data representation)
             'model': 'LSTM', 
-            'best_model_path': './ckpt/lstm.pt',  # 학습 완료 모델 저장 경로
+            'best_model': 'lstm.pt',  # 학습 완료 모델 저장 경로
             'parameter': {
                 'input_size': 9,  # 데이터의 변수 개수, int
                 'num_classes': 6,  # 분류할 class 개수, int
@@ -17,7 +17,7 @@ model_config = {
     },
     'GRU' : {  # Case 2. GRU model (w/o data representation)
         'model': 'GRU',
-        'best_model_path': './ckpt/gru.pt',  # 학습 완료 모델 저장 경로
+        'best_model': 'gru.pt',  # 학습 완료 모델 저장 경로
         'parameter': {
             'input_size': 9,  # 데이터의 변수 개수, int
             'num_classes': 6,  # 분류할 class 개수, int
@@ -33,7 +33,7 @@ model_config = {
     },
     'CNN_1D' : {  # Case 3. CNN_1D model (w/o data representation)
         'model': 'CNN_1D', 
-        'best_model_path': './ckpt/cnn_1d.pt',  # 학습 완료 모델 저장 경로
+        'best_model': 'cnn_1d.pt',  # 학습 완료 모델 저장 경로
         'parameter': {
             'input_size': 9,  # 데이터의 변수 개수, int
             'num_classes': 6,  # 분류할 class 개수, int
@@ -51,7 +51,7 @@ model_config = {
     },
     'LSTM_FCNs' : {  # Case 4. LSTM_FCNs model (w/o data representation)
         'model': 'LSTM_FCNs', 
-        'best_model_path': './ckpt/lstm_fcn.pt',  # 학습 완료 모델 저장 경로
+        'best_model': 'lstm_fcn.pt',  # 학습 완료 모델 저장 경로
         'parameter': {
             'input_size': 9,  # 데이터의 변수 개수, int
             'num_classes': 6,  # 분류할 class 개수, int
@@ -66,7 +66,7 @@ model_config = {
     },
     'FC' : {  # Case 5. fully-connected layers (w/ data representation)
         'model': 'FC', 
-        "best_model_path": './ckpt/fc.pt',  # 학습 완료 모델 저장 경로
+        "best_model": 'fc.pt',  # 학습 완료 모델 저장 경로
         'parameter': {
             'input_size': 64,  # 데이터의 변수 개수(representation 차원), int
             'num_classes': 6,  # 분류할 class 개수, int
